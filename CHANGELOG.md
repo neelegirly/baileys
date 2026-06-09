@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.26
+
+### 🛠️ QR-/Pairing-Login-Fix + Self-Healing WA-Web-Version
+
+- Fixed QR/pairing login that died with `statusCode 405` ("Multi-device mismatch") because of a stale WhatsApp-Web version. Baseline updated to `2.3000.1035194821`.
+- `fetchLatestBaileysVersion()` now self-heals: it reads the upstream-maintained version pin instead of a dead neelegirly `/src/` URL (which 404'd and silently pinned a stale version).
+- Message-ID logic (`NEELE` signature in `generateMessageID` / `generateMessageIDV2`) preserved 1:1.
+- Refreshed README: version scheme (fork version vs. WA-Web baseline), message-ID note, install/update.
+- Modernized boot banner with an honest WhatsApp-Web-baseline line.
+- Companion stack aligned to `2.2.26 / 1.8.10 / 1.0.32`.
+
 ## v2.2.24-ecosystem-clean
 
 ### 💖 Neelegirly Ecosystem Clean Stability Update
