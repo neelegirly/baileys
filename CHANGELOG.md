@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.2.27
+
+### 🔓 Fix: peers stuck on "Waiting for this message" (outbound retry receipts)
+
+- `sendMessagesAgain()` now falls back to the `messageRetryManager` recent-message
+  cache when `getMessage` returns nothing. Previously, with the default
+  `getMessage: async () => undefined`, every incoming retry receipt died with
+  "message not available", leaving the **recipient** stuck on WhatsApp's
+  "Waiting for this message" placeholder forever.
+- Restores upstream Baileys behaviour. No security/E2E check is touched — only a
+  message we just sent is re-encrypted for the **same** recipient via the normal
+  `relayMessage` path.
+
 ## v2.2.26
 
 ### 🛠️ QR-/Pairing-Login-Fix + Self-Healing WA-Web-Version
