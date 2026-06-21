@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.29
+
+### 📱 Fix: instant device-change detection (no stale "Waiting for this message")
+
+- On a contact’s `devices` notification, force-refresh that contact’s device list (bypassing the 5-min USER_DEVICES cache) so the next message reaches the new/changed device immediately.
+- Fail-safe (try/catch, worst case one extra usync). Pairs with the existing trust-on-change identity handling so device switches recover cleanly.
+
 ## v2.2.28
 
 ### 🔗 Fix: dependency pin so the WFTM fix installs transitively
