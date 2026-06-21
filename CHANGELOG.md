@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.28
+
+### 🔗 Fix: dependency pin so the WFTM fix installs transitively
+
+- Bumped declared `@neelegirly/libsignal` dependency (and matching override) 1.0.32 → **1.0.33**.
+- Code identical to 2.2.27 — corrects metadata so a clean `npm install` resolves the intended versions.
+
 ## v2.2.27
 
 ### 🔓 Fix: peers stuck on "Waiting for this message" (outbound retry receipts)
