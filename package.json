@@ -1,7 +1,7 @@
 {
   "name": "@neelegirly/baileys",
-  "version": "2.2.29",
-  "description": "Neelegirly fork of Baileys: multi-device WhatsApp Web API for Node.js",
+  "version": "2.2.30",
+  "description": "Eigenstaendiger Baileys-Fork von Neele Girl (NICHT WhiskeySockets/Baileys) — multi-device WhatsApp Web API fuer Node.js, mit Multi-Button-Support, QR-/Pairing-Stabilitaet und self-healing WA-Web-Version.",
   "keywords": [
     "whatsapp",
     "js-whatsapp",
@@ -20,7 +20,10 @@
     "url": "git+https://github.com/neelegirly/baileys.git"
   },
   "license": "MIT",
-  "author": "neelegirly",
+  "author": "Neele Girl (neelegirly)",
+  "contributors": [
+    "Rajeh Taher/WhiskeySockets — Baileys upstream (https://github.com/WhiskeySockets/Baileys)"
+  ],
   "main": "lib/index.js",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",

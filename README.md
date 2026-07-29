@@ -6,20 +6,38 @@
 ### *QR Branding · Self-Healing WA-Web-Version · Wrapper-Aware Update Notify · LID · Smart Queue*
 
 [![npm](https://img.shields.io/npm/v/%40neelegirly%2Fbaileys?style=for-the-badge&color=ff69b4&logo=npm)](https://www.npmjs.com/package/@neelegirly/baileys)
-[![wa-api](https://img.shields.io/badge/wa--api-1.8.10-c77dff?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/wa-api)
-[![libsignal](https://img.shields.io/badge/libsignal-1.0.32-f4a261?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/libsignal)
-[![WA-Web](https://img.shields.io/badge/WhatsApp--Web-2.3000.1035194821-25D366?style=for-the-badge&logo=whatsapp)](https://web.whatsapp.com)
+[![wa-api](https://img.shields.io/badge/wa--api-1.8.13-c77dff?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/wa-api)
+[![libsignal](https://img.shields.io/badge/libsignal-1.0.33-f4a261?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/libsignal)
+[![WA-Web](https://img.shields.io/badge/WhatsApp--Web-2.3000.1043857760-25D366?style=for-the-badge&logo=whatsapp)](https://web.whatsapp.com)
 [![Node](https://img.shields.io/badge/Node-16+-4caf50?style=for-the-badge&logo=node.js)](https://nodejs.org)
 
 <p align="center">
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.26 / 1.8.10 / 1.0.32</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.30 / 1.8.13 / 1.0.33</strong></sub></p>
 
-[**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2226)
+[**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2230)
 
 </div>
+
+---
+
+> ### ⚠️ Das hier ist **NICHT** `WhiskeySockets/Baileys`
+>
+> `@neelegirly/baileys` ist ein **eigenständiger Fork**, gepflegt von **Neele Girl**.
+> Eigene Versionszählung (`2.2.x`, **nicht** `6.7.x` / `7.x`), eigene Anpassungen:
+> **Multi-Buttons** (`interactiveMessage` / `carouselMessage` / `nativeFlow`),
+> **QR-/Pairing-Stabilität**, self-healing WA-Web-Version, eigene Message-ID-Signatur,
+> `Store`-Layer und Mongo-/Single-File-Auth-States.
+>
+> Bug-Reports gehören zu **[neelegirly/baileys/issues](https://github.com/neelegirly/baileys/issues)** —
+> **nicht** ins Upstream-Repo. Umgekehrt gilt: Upstream-Issues/PRs treffen auf diesen Fork
+> oft nicht zu, weil er strukturell abweicht.
+>
+> Basiert auf **[Baileys](https://github.com/WhiskeySockets/Baileys)** von Rajeh Taher/WhiskeySockets,
+> MIT-lizenziert — deren Copyright-Vermerk bleibt in der [LICENSE](LICENSE) erhalten. Danke für die Grundlage. 🌸
+> Nicht offiziell mit WhatsApp, Meta oder dem Baileys-Upstream verbunden.
 
 ---
 
@@ -61,8 +79,8 @@ Wichtig zu verstehen — hier laufen **zwei voneinander unabhängige** Versionsn
 
 | Nummer | Beispiel | Bedeutung |
 | --- | --- | --- |
-| **Fork-Version** | `2.2.26` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
-| **WhatsApp-Web-Baseline** | `2.3000.1035194821` | Die Client-Version, die im Handshake an WhatsApp gemeldet wird. Wird zur Laufzeit aktuell gehalten (self-healing). |
+| **Fork-Version** | `2.2.30` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
+| **WhatsApp-Web-Baseline** | `2.3000.1043857760` | Die Client-Version, die im Handshake an WhatsApp gemeldet wird. Wird zur Laufzeit aktuell gehalten (self-healing). |
 
 Die Fork-Version `2.2.x` ist also reines Paket-Versioning. Welche WhatsApp-Web-Version tatsächlich verbunden wird, zeigt der Boot-Banner und `fetchLatestBaileysVersion()`.
 
@@ -84,14 +102,14 @@ generateMessageID() // → z. B. "3AC18D8ANEELE3B14420"
 ## 🚀 Installation
 
 ```bash
-npm install @neelegirly/baileys@2.2.26 @neelegirly/libsignal@1.0.32 --save-exact
+npm install @neelegirly/baileys@2.2.30 @neelegirly/libsignal@1.0.33 --save-exact
 ```
 
 ```bash
-yarn add @neelegirly/baileys@2.2.26 @neelegirly/libsignal@1.0.32 --exact
+yarn add @neelegirly/baileys@2.2.30 @neelegirly/libsignal@1.0.33 --exact
 ```
 
-> Für den kompletten Stack passt dazu `@neelegirly/wa-api@1.8.10`.
+> Für den kompletten Stack passt dazu `@neelegirly/wa-api@1.8.13`.
 
 ### Update eines bestehenden Setups
 
@@ -146,9 +164,9 @@ start().catch(console.error)
 
 | Paket | Version | Rolle |
 |------|---------|-------|
-| `@neelegirly/baileys` | `2.2.26` | Socket, Events, Messaging |
-| `@neelegirly/libsignal` | `1.0.32` | Signal-Protokoll-Komponente |
-| `@neelegirly/wa-api` | `1.8.10` | Lifecycle-, Session- und Update-Wrapper |
+| `@neelegirly/baileys` | `2.2.30` | Socket, Events, Messaging |
+| `@neelegirly/libsignal` | `1.0.33` | Signal-Protokoll-Komponente |
+| `@neelegirly/wa-api` | `1.8.13` | Lifecycle-, Session- und Update-Wrapper |
 
 ---
 
@@ -167,13 +185,20 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 
 ---
 
-## 📝 Release Notes `2.2.26`
+## 📝 Release Notes `2.2.30`
 
-- 🛠️ **QR-/Pairing-Login repariert.** Die veraltete, hartcodierte WhatsApp-Web-Version führte zu `statusCode 405` ("Multi-device mismatch") und verhinderte jeden QR-Scan. Baseline auf `2.3000.1035194821` aktualisiert.
-- 🌐 **Self-Healing WA-Web-Version.** `fetchLatestBaileysVersion()` bezieht die Versionsangabe jetzt aus einer **gepflegten, immer aktuellen Quelle** statt aus einer toten URL (die zuvor mit `404` ins Leere lief und still eine veraltete Version pinnte). Künftige WhatsApp-Versions-Bumps heilen sich damit selbst.
-- 🧷 **Message-ID-Logik unverändert.** Die `NEELE`-Signatur in `generateMessageID` / `generateMessageIDV2` bleibt exakt erhalten.
-- 🪧 **Modernisierter Boot-Banner.** Zusätzliche, ehrliche Zeile mit der aktiven WhatsApp-Web-Baseline.
-- 🔗 Companion-Stack auf `2.2.26 / 1.8.10 / 1.0.32` aktualisiert.
+- 🔧 **`fetchLatestWaWebVersion()` repariert.** Die Guard-Zeile las `match?.match[1]` statt `match?.[1]` und warf dadurch **bei jedem Aufruf** einen `TypeError`, der im `catch` verschwand. Die Funktion fiel deshalb *immer* still auf die eingebaute Baseline zurück und meldete `isLatest: false` — sie hat nie funktioniert. Jetzt liefert sie die echte Live-Version von `web.whatsapp.com/sw.js`.
+- 📌 **WA-Web-Baseline aktualisiert** auf `2.3000.1043857760` (vorher `2.3000.1035194821`). Das ist nur der Offline-Notnagel: `fetchLatestBaileysVersion()` holt die Version weiterhin zur Laufzeit. Greift also, wenn beim Start kein Netz zur Versionsquelle besteht.
+- ⚖️ **LICENSE korrigiert.** Der MIT-Copyright-Vermerk des Upstreams (Rajeh Taher/WhiskeySockets) war entfernt worden — MIT verlangt ihn aber bei substanziellen Teilen. Er steht jetzt wieder drin, neben dem Fork-Copyright.
+- 🏷️ **Klarere Abgrenzung.** README-Kopf, `description` und `contributors` machen unmissverständlich, dass dies ein eigenständiger Fork von Neele Girl ist und **nicht** `WhiskeySockets/Baileys`.
+- 🧷 **Message-ID- und QR-/Pairing-Logik unverändert.** Kein Byte an `generateMessageID` / `generateMessageIDV2` (`NEELE`-Signatur) oder am QR-/Pairing-Flow.
+- 🔗 Companion-Stack: `2.2.30 / 1.8.13 / 1.0.33`.
+
+> **Kein Upstream-Merge.** Dieser Fork weicht strukturell von `WhiskeySockets/Baileys` ab
+> (eigener `Store`-Layer, `Socket/registration`, `WASignalGroup`, eigene Message-IDs; Upstream 7.x
+> setzt inzwischen auf `whatsapp-rust-bridge` und hat `Store` entfernt). Ein mechanischer Merge
+> würde den Fork zerlegen. Der einzige Punkt, der Logins wirklich bricht — die WhatsApp-Web-Version —
+> wird zur Laufzeit self-healing nachgezogen.
 
 ---
 

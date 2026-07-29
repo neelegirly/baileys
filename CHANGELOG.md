@@ -1,5 +1,47 @@
 # Changelog
 
+## v2.2.30
+
+### 🔧 Fix: `fetchLatestWaWebVersion()` hat nie funktioniert
+
+- Die Guard-Zeile prüfte `match?.match[1]` statt `match?.[1]`. `match` ist das Ergebnis von
+  `String.prototype.match`, hat also keine Eigenschaft `.match` — der Zugriff warf bei **jedem**
+  Aufruf `TypeError: Cannot read properties of undefined (reading '1')`. Der `try/catch` schluckte
+  das und gab stumm die eingebaute Baseline mit `isLatest: false` zurück.
+- Die Regex selbst war korrekt. Nach dem Fix liefert die Funktion die echte Live-`client_revision`
+  von `https://web.whatsapp.com/sw.js`.
+- Zusätzlich `String(data)` vor dem `.match()`, damit ein nicht-String-Body (je nach
+  axios-`responseType`) nicht erneut in denselben stillen Fallback läuft.
+
+### 📌 WA-Web-Baseline aktualisiert
+
+- `lib/Defaults/baileys-version.json`: `2.3000.1035194821` → **`2.3000.1043857760`**.
+- Reiner Offline-Fallback. Der reguläre Weg bleibt `fetchLatestBaileysVersion()`, das die Version
+  zur Laufzeit zieht — der Wert greift nur, wenn beim Start die Versionsquelle nicht erreichbar ist.
+
+### ⚖️ LICENSE: Upstream-Copyright wiederhergestellt
+
+- Der MIT-Vermerk von Rajeh Taher/WhiskeySockets fehlte. MIT verlangt ihn bei substanziellen
+  Teilen der Software — dieser Fork enthält solche. Steht jetzt wieder in `LICENSE`, zusammen
+  mit dem Fork-Copyright und einem Hinweis auf die Herkunft.
+
+### 🏷️ Klarere Fork-Abgrenzung
+
+- README-Kopf mit deutlichem „Das hier ist **NICHT** WhiskeySockets/Baileys"-Block, inkl. Hinweis,
+  wohin Bug-Reports gehören und warum Upstream-Issues hier oft nicht zutreffen.
+- `description` und neue `contributors` in `package.json`; `author` → `Neele Girl (neelegirly)`.
+- README-Versionsangaben waren seit 2.2.26 stehengeblieben (Badges, Installationsbefehle,
+  Stack-Tabelle, Release-Notes) — jetzt auf `2.2.30 / 1.8.13 / 1.0.33` und die neue WA-Baseline.
+- Bild/Logo und die inhaltliche Beschreibung des Forks bleiben unverändert.
+
+### 🧷 Bewusst NICHT angefasst
+
+- Message-ID-Logik (`generateMessageID`, `generateMessageIDV2`, `NEELE`-Signatur) — 1:1 wie in 2.2.29.
+- QR-/Pairing-Flow, Noise-Handler, Auth-State, Signal-Layer.
+- Kein Upstream-Merge: Der Fork weicht strukturell zu weit ab (eigener `Store`-Layer,
+  `Socket/registration.js`, `Signal/WASignalGroup/`; Upstream 7.x nutzt `whatsapp-rust-bridge`
+  und hat `Store` entfernt). Ein Merge würde den Fork zerlegen, ohne ein reales Problem zu lösen.
+
 ## v2.2.29
 
 ### 📱 Fix: instant device-change detection (no stale "Waiting for this message")
