@@ -1,6 +1,6 @@
 {
   "name": "@neelegirly/baileys",
-  "version": "2.2.30",
+  "version": "2.2.31",
   "description": "Eigenstaendiger Baileys-Fork von Neele Girl (NICHT WhiskeySockets/Baileys) — multi-device WhatsApp Web API fuer Node.js, mit Multi-Button-Support, QR-/Pairing-Stabilitaet und self-healing WA-Web-Version.",
   "keywords": [
     "whatsapp",
@@ -54,6 +54,8 @@
     "cache-manager": "4.0.1",
     "futoin-hkdf": "^1.5.1",
     "libphonenumber-js": "^1.10.20",
+    "lodash": "^4.17.21",
+    "lru-cache": "^11.1.0",
     "music-metadata": "^7.12.3",
     "node-cache": "^5.1.2",
     "pino": "^7.0.0",

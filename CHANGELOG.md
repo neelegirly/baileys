@@ -1,5 +1,50 @@
 # Changelog
 
+## v2.2.31 – Message Recovery & Decryption Stability
+
+Behebt die Hauptursachen für dauerhaftes „Warte auf diese Nachricht" / "Waiting for this message".
+Gefunden an einem Produktiv-Bot über die Signal-Schlüsseldateien (registrationId je Session).
+
+### 🔐 Entschlüsseln: Gerät des Absenders bleibt erhalten
+- `Utils/decode-wa-message.js`: `normalizeDecryptJid` benutzte `jidNormalizedUser` und strich damit die
+  Gerätenummer weg. Ein `pkmsg` von WhatsApp Web (z. B. Gerät 5) baute seine Session im Datensatz von
+  Gerät 0 (Handy) und wurde dort die offene Session; Nachrichten an das Handy waren danach mit dem
+  Schlüssel des anderen Geräts verschlüsselt. Das Gerät kommt jetzt aus `participant`/`from` (auch
+  wenn `participant_pn` keins trägt).
+
+### 🔁 Retry / Neuzustellung
+- `relayMessage`: bei gezielter Neuzustellung bleiben Server + JID des anfragenden Geräts erhalten.
+  Vorher entstand im Gruppenzweig `<lid-nummer>:<gerät>@s.whatsapp.net` — eine Nummer, die es nicht gibt.
+  (Gleiche Fix-Klasse wie in WhiskeySockets/Baileys 7.x: `devices.push({ …, jid: participant.jid })`.)
+- `sendMessagesAgain`: Session des anfragenden Geräts unter **beiden** Adressen (LID + Telefonnummer)
+  frisch, damit auch der normale Sendeweg die neue Session benutzt.
+- Schlüssel aus der Retry-Anfrage selbst (`<keys>`) werden für den Neuaufbau benutzt — portiert aus
+  WhiskeySockets/Baileys 7.0.0-rc14 (`extractE2ESessionFromRetryReceipt`, MIT). Ohne/fehlerhaft: wie bisher vom Server.
+- Hauptgerät → an alle, Zweitgerät → gezielt (wie Upstream). In Gruppen beim „an alle" keine
+  Neuabfrage der Gerätelisten aller Mitglieder (vermeidet `rate-overlimit`).
+- Gezielte Neuzustellung scheitert nicht mehr an einer gedrosselten Gruppenabfrage.
+- Sichtbarkeit: Zeile `[ONIMAI retry] resent|failed|limit|missing` (max. 30/min, aus mit `ONIMAI_LOG_RETRY_RESEND=0`),
+  da der Baileys-Logger in Bots meist `silent` steht.
+
+### 🗝️ Signal-Sessions
+- `loadSession`: Ersatz nur noch durch DASSELBE Gerät unter der anderen Adresse (PN ↔ LID), nie durch Gerät 0.
+- Session-Suche beim Entschlüsseln: dasselbe Gerät unter PN + LID statt Geräte 0–99 beider Adressen
+  (vorher ~200 Lesezugriffe je Nachricht); Rückgriff auf Gerät 0 nur für Altbestand (siehe oben).
+- Höchstens 40 Sessions je Datensatz auch beim Neuaufbau (`initOutgoing` kappte nicht: im Feld 1207 Sessions / 1 MB für ein Gerät).
+
+### 🧩 Bisher nur per patch-package in Onimai, jetzt im Paket
+- `generateWAMessageContent`: `interactiveMessage` / `viewOnceMessage*` werden durchgereicht (Multi-Buttons, Native Flow, Carousel).
+- `process-message.js`: Umfrage-Stimmen warfen `ReferenceError` (`pollMsg` vor der Initialisierung benutzt).
+
+### 📦 Fehlende Abhängigkeiten
+- `lodash` (Utils/signal.js) und `lru-cache` (Utils/message-retry-manager.js) wurden benutzt, standen aber nicht in
+  `dependencies`. Ein frisches `npm i @neelegirly/baileys` brach deshalb schon beim `require` ab (betraf auch 2.2.30) —
+  in Bots fiel es nur nicht auf, weil andere Pakete beides mitbrachten. Jetzt deklariert (`lru-cache ^11.1.0` wie Upstream).
+
+### Unverändert erhalten
+NEELE-Message-IDs, QR-Branding, Pairing-Code, Store, Multi-/Single-File-Auth, CommonJS, WA-Web-Versionserkennung.
+Kein Merge von Baileys 7.x — nur die oben genannten Fix-Klassen.
+
 ## v2.2.30
 
 ### 🔧 Fix: `fetchLatestWaWebVersion()` hat nie funktioniert

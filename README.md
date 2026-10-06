@@ -15,7 +15,7 @@
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.30 / 1.8.13 / 1.0.33</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.31 / 1.8.14 / 1.0.33</strong></sub></p>
 
 [**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2230)
 
@@ -79,7 +79,7 @@ Wichtig zu verstehen — hier laufen **zwei voneinander unabhängige** Versionsn
 
 | Nummer | Beispiel | Bedeutung |
 | --- | --- | --- |
-| **Fork-Version** | `2.2.30` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
+| **Fork-Version** | `2.2.31` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
 | **WhatsApp-Web-Baseline** | `2.3000.1043857760` | Die Client-Version, die im Handshake an WhatsApp gemeldet wird. Wird zur Laufzeit aktuell gehalten (self-healing). |
 
 Die Fork-Version `2.2.x` ist also reines Paket-Versioning. Welche WhatsApp-Web-Version tatsächlich verbunden wird, zeigt der Boot-Banner und `fetchLatestBaileysVersion()`.
@@ -102,11 +102,11 @@ generateMessageID() // → z. B. "3AC18D8ANEELE3B14420"
 ## 🚀 Installation
 
 ```bash
-npm install @neelegirly/baileys@2.2.30 @neelegirly/libsignal@1.0.33 --save-exact
+npm install @neelegirly/baileys@2.2.31 @neelegirly/libsignal@1.0.33 --save-exact
 ```
 
 ```bash
-yarn add @neelegirly/baileys@2.2.30 @neelegirly/libsignal@1.0.33 --exact
+yarn add @neelegirly/baileys@2.2.31 @neelegirly/libsignal@1.0.33 --exact
 ```
 
 > Für den kompletten Stack passt dazu `@neelegirly/wa-api@1.8.13`.
@@ -164,7 +164,7 @@ start().catch(console.error)
 
 | Paket | Version | Rolle |
 |------|---------|-------|
-| `@neelegirly/baileys` | `2.2.30` | Socket, Events, Messaging |
+| `@neelegirly/baileys` | `2.2.31` | Socket, Events, Messaging |
 | `@neelegirly/libsignal` | `1.0.33` | Signal-Protokoll-Komponente |
 | `@neelegirly/wa-api` | `1.8.13` | Lifecycle-, Session- und Update-Wrapper |
 
@@ -184,6 +184,15 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 ```
 
 ---
+
+## 📝 Release Notes `2.2.31`
+
+- 🔐 **„Warte auf diese Nachricht“: Gerät beim Entschlüsseln erhalten.** Sessions von Zweitgeräten (WhatsApp Web/Desktop) landeten im Datensatz des Handys, der Bot verschlüsselte ans Handy danach mit dem falschen Schlüssel.
+- 🔁 **Retry repariert.** Neuzustellung an die echte Geräteadresse (vorher eine erfundene `<lid>@s.whatsapp.net`), beide Adressen (LID + Nummer) frisch, Schlüssel direkt aus der Retry-Anfrage (portiert aus WhiskeySockets 7.0.0-rc14, MIT), Logzeile `[ONIMAI retry]`.
+- 🗝️ **Signal-Sessions:** kein Ersatz durch fremde Geräte, max. 40 Sessions je Datensatz, keine ~200 Lesezugriffe je Nachricht mehr.
+- 🧩 **Multi-Buttons / Native Flow / Carousel** und **Umfrage-Stimmen** ohne patch-package.
+- 🧷 NEELE-Message-IDs, QR/Pairing, Store, Auth-Helfer unverändert. Details: `CHANGELOG.md`.
+- 🔗 Companion-Stack: `2.2.31 / 1.8.14 / 1.0.33`.
 
 ## 📝 Release Notes `2.2.30`
 
