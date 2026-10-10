@@ -1,6 +1,7 @@
 export * from './generics'
 export * from './decode-wa-message'
 export * from './messages'
+export * from './interactive-envelope'
 export * from './messages-media'
 export * from './validate-connection'
 export * from './crypto'

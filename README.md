@@ -15,7 +15,7 @@
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.31 / 1.8.14 / 1.0.33</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.32 / 1.8.14 / 1.0.33</strong></sub></p>
 
 [**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2230)
 
@@ -79,7 +79,7 @@ Wichtig zu verstehen — hier laufen **zwei voneinander unabhängige** Versionsn
 
 | Nummer | Beispiel | Bedeutung |
 | --- | --- | --- |
-| **Fork-Version** | `2.2.31` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
+| **Fork-Version** | `2.2.32` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
 | **WhatsApp-Web-Baseline** | `2.3000.1043857760` | Die Client-Version, die im Handshake an WhatsApp gemeldet wird. Wird zur Laufzeit aktuell gehalten (self-healing). |
 
 Die Fork-Version `2.2.x` ist also reines Paket-Versioning. Welche WhatsApp-Web-Version tatsächlich verbunden wird, zeigt der Boot-Banner und `fetchLatestBaileysVersion()`.
@@ -102,11 +102,11 @@ generateMessageID() // → z. B. "3AC18D8ANEELE3B14420"
 ## 🚀 Installation
 
 ```bash
-npm install @neelegirly/baileys@2.2.31 @neelegirly/libsignal@1.0.33 --save-exact
+npm install @neelegirly/baileys@2.2.32 @neelegirly/libsignal@1.0.33 --save-exact
 ```
 
 ```bash
-yarn add @neelegirly/baileys@2.2.31 @neelegirly/libsignal@1.0.33 --exact
+yarn add @neelegirly/baileys@2.2.32 @neelegirly/libsignal@1.0.33 --exact
 ```
 
 > Für den kompletten Stack passt dazu `@neelegirly/wa-api@1.8.13`.
@@ -164,7 +164,7 @@ start().catch(console.error)
 
 | Paket | Version | Rolle |
 |------|---------|-------|
-| `@neelegirly/baileys` | `2.2.31` | Socket, Events, Messaging |
+| `@neelegirly/baileys` | `2.2.32` | Socket, Events, Messaging |
 | `@neelegirly/libsignal` | `1.0.33` | Signal-Protokoll-Komponente |
 | `@neelegirly/wa-api` | `1.8.13` | Lifecycle-, Session- und Update-Wrapper |
 
@@ -184,6 +184,29 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 ```
 
 ---
+
+## 📝 Release Notes `2.2.32`
+
+`prepareInteractiveMessageForMd(message)` ergänzt für eine interaktive Karte
+genau einen Multi-Device-Umschlag mit `deviceListMetadataVersion: 2`. Ein
+vorhandener View-once-Umschlag bleibt erhalten. GIF/Video im Header, Text,
+Knöpfe und Zitat bleiben gemeinsam in einer Nachricht. Der Helper sendet
+nichts selbst und verändert weder Socket-Verbindungen noch Konten.
+
+```js
+const { prepareInteractiveMessageForMd, generateWAMessageFromContent } = require('@neelegirly/baileys')
+// card: vorhandenes { interactiveMessage: { header, body, footer, nativeFlowMessage } }
+const msg = generateWAMessageFromContent(jid, prepareInteractiveMessageForMd(card), {
+  userJid: sock.user.id
+})
+await sock.relayMessage(jid, msg.message, { messageId: msg.key.id })
+```
+
+Für eine GIF-Karte mit direkten Auswahlknöpfen `quick_reply` verwenden.
+`single_select` ist ein anderer Knopftyp; der Helper macht ihn nicht durch
+einen Umschlag automatisch auf jedem iOS-/Android-Client sichtbar. Die
+Darstellung muss auf den verwendeten WhatsApp-Clients geprüft werden.
+Es gibt keine automatische Umstellung vorhandener Nachrichten.
 
 ## 📝 Release Notes `2.2.31`
 

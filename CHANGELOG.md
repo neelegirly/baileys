@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.2.32 – Single-card Multi-Device Envelope
+
+- Neuer opt-in Helper `prepareInteractiveMessageForMd(message)`, über den
+  Paketexport und `lib/Utils/interactive-envelope.js` verfügbar, mit Typen.
+- Eine interaktive GIF-/Video-Karte erhält genau einen MD-Umschlag; vorhandene
+  View-once-/Ephemeral-Umschläge, Medien, Knöpfe, IDs und Zitate bleiben erhalten.
+- Ergänzt fehlende Device-List-Metadaten ohne Netzwerkzugriff, Medienupload,
+  Nachrichtenteilung oder automatische Knopf-/Socket-Änderungen.
+- Echte Protobuf-Tests für GIF und zehn Knöpfe in einer Karte, Idempotenz,
+  Metadatenerhalt und Ephemeral-Nachrichten; im veröffentlichten Paket enthalten.
+- Knopfdarstellung bleibt clientabhängig. Dies ist keine Zusage, dass iOS
+  Native-Flow-`single_select` dadurch unterstützt.
+
 ## v2.2.31 – Message Recovery & Decryption Stability
 
 Behebt die Hauptursachen für dauerhaftes „Warte auf diese Nachricht" / "Waiting for this message".
