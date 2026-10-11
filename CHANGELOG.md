@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.33 – Preserve Raw Carousel Transport
+
+- Der automatische MD-Patch erhält rohe `interactiveMessage.carouselMessage`
+  statt den Legacy-View-once-Patch für Einzelkarten darauf anzuwenden.
+- Ausdrücklich umhüllte Karussells bleiben erhalten; Einzelkarten, Listen,
+  Templates und normale Nachrichten behalten das bisherige Verhalten.
+- Transporttests mit zwei Bildkarten, drei `single_select` und drei
+  `cta_url`, echten Protobuf-Rundläufen und Metadatenerhalt.
+- Die Darstellung auf iOS, Android und Web ist am jeweiligen Client zu
+  prüfen. Ein erfolgreicher Transporttest ist keine Gerätebestätigung.
+
 ## v2.2.32 – Single-card Multi-Device Envelope
 
 - Neuer opt-in Helper `prepareInteractiveMessageForMd(message)`, über den

@@ -1,6 +1,6 @@
 {
   "name": "@neelegirly/baileys",
-  "version": "2.2.32",
+  "version": "2.2.33",
   "description": "Eigenstaendiger Baileys-Fork von Neele Girl (NICHT WhiskeySockets/Baileys) — multi-device WhatsApp Web API fuer Node.js, mit Multi-Button-Support, QR-/Pairing-Stabilitaet und self-healing WA-Web-Version.",
   "keywords": [
     "whatsapp",
@@ -33,7 +33,8 @@
     "tsconfig.json",
     "README.md",
     "LICENSE",
-    "tests/interactive-envelope.test.cjs"
+    "tests/interactive-envelope.test.cjs",
+    "tests/carousel-wire.test.cjs"
   ],
   "exports": {
     ".": {
@@ -123,6 +124,6 @@
     "build:all": "tsc && typedoc",
     "build:docs": "typedoc",
     "build:tsc": "tsc",
-    "test": "node --check lib/Socket/groups.js && node --check lib/Socket/messages-recv.js && node --check lib/Socket/messages-send.js && node --check lib/Socket/socket.js && node --check lib/Utils/auth-utils.js && node --check lib/Utils/decode-wa-message.js && node --check lib/Utils/process-message.js && node --check lib/Utils/link-preview.js && node -e \"const b=require('./'); if(typeof b.makeWASocket !== 'function' || b.NACK_REASONS.SenderReachoutTimelocked !== 463 || b.QueryIds.FOLLOW !== '24404358912487870') process.exit(1)\" && node --test tests/interactive-envelope.test.cjs"
+    "test": "node --check lib/Socket/groups.js && node --check lib/Socket/messages-recv.js && node --check lib/Socket/messages-send.js && node --check lib/Socket/socket.js && node --check lib/Utils/auth-utils.js && node --check lib/Utils/decode-wa-message.js && node --check lib/Utils/process-message.js && node --check lib/Utils/link-preview.js && node -e \"const b=require('./'); if(typeof b.makeWASocket !== 'function' || b.NACK_REASONS.SenderReachoutTimelocked !== 463 || b.QueryIds.FOLLOW !== '24404358912487870') process.exit(1)\" && node --test tests/interactive-envelope.test.cjs tests/carousel-wire.test.cjs"
   }
 }

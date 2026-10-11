@@ -15,7 +15,7 @@
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.32 / 1.8.14 / 1.0.33</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.33 / 1.8.14 / 1.0.33</strong></sub></p>
 
 [**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2230)
 
@@ -184,6 +184,16 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 ```
 
 ---
+
+## 📝 Release Notes `2.2.33`
+
+`patchMessageForMdIfRequired` erhält jetzt die vom Aufrufer übergebene rohe
+`interactiveMessage.carouselMessage`-Struktur. Der bisherige automatische
+View-once-Patch für einzelne Karten wird nicht mehr auf rohe Karussells
+angewendet. Bereits ausdrücklich umhüllte Nachrichten bleiben erhalten;
+einzelne interaktive Karten, Listen und Templates behalten ihren bisherigen
+MD-Patch. Die Darstellung der verwendeten Knöpfe muss weiterhin auf den
+jeweiligen WhatsApp-Clients geprüft werden.
 
 ## 📝 Release Notes `2.2.32`
 
