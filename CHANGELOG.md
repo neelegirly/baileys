@@ -1,5 +1,73 @@
 # Changelog
 
+## v2.3.0 – Schlanker, sauberer Verbindungsabbau, echte Tests
+
+- Abhängigkeit `@neelegirly/libsignal` auf `1.0.34` angehoben (veröffentlicht).
+
+MINOR, weil sich die Installation ändert (optionale Peer-Abhängigkeiten).
+Öffentliche API und Fehlerform (`lastDisconnect.error.output.statusCode`) bleiben gleich.
+
+### 📦 Abhängigkeiten
+- Entfernt (im Code nicht geladen bzw. nativ ersetzt): `futoin-hkdf`, `uuid`, `node-cache`,
+  `libphonenumber-js`, `lodash` (`chunk` jetzt nativ in `lib/Utils/chunk.js`, gleiche Randfälle).
+- Optionale Peer-Abhängigkeiten statt fester Abhängigkeiten:
+  - `audio-decode` (^2.1.3) – nur für die Wellenform bei Sprachnachrichten. Ohne das Paket wird die
+    Nachricht wie bisher bei Fehlern ohne Wellenform gebaut.
+  - `cache-manager` (^4.0.1) – nur für `makeCacheManagerAuthState`; wird erst beim Aufruf geladen.
+    Ohne das Paket: Fehler mit Installationshinweis. Der Typ hängt nicht mehr an `cache-manager`.
+- Unverändert: axios, @hapi/boom, async-mutex, pino, protobufjs, ws, @cacheable/node-cache,
+  lru-cache, music-metadata, @adiwajshing/keyed-db, @neelegirly/libsignal (1.0.33).
+- Gemessen (frisches `npm ci --omit=dev --ignore-scripts`, Node 22): direkte Abhängigkeiten 18 → 11,
+  Pakete 128 → 101, `node_modules` 72 240 → 25 320 KiB (`du -sk`). `require()`-Kaltstart unverändert
+  (Median 469 → 466 ms, n = 21, im Rauschen). Paket: 1 131 690 → 1 136 537 Byte (4 neue kleine Dateien).
+
+### 🔌 Verbindungsabbau und mehrere Sitzungen
+- `end()` beendet wartende Abfragen (`query`, Handshake, `waitForSocketOpen`) sofort mit
+  `Connection Closed` (428). Vorher hingen sie nach dem Schließen bis zu ihrem Timeout (20–60 s).
+- Beim Schließen werden die vom Socket **selbst erzeugten** Caches geschlossen (stoppt ihre
+  Prüf-Intervalle, die bisher je Wiederverbindung liegen blieben). Vom Aufrufer übergebene Caches
+  (`msgRetryCounterCache`, `userDevicesCache`, …) bleiben unberührt.
+- Ebenfalls abgebrochen: geplante Retry-Telefonanfragen (`MessageRetryManager.clear()`, neu),
+  der 20-s-Timer des Initial-Syncs und die 15-s-Timer der Platzhalter-Neuanforderung.
+- Wirft ein `connection.update`-Listener beim Schließen, wird der Fehler geloggt und das Aufräumen
+  läuft weiter. Vorher wurde daraus ein ungefangener Fehler im WebSocket-Handler, der den ganzen
+  Prozess samt allen anderen Sitzungen beenden konnte.
+- `WebSocketClient`: `isClosing`/`isConnecting` lieferten mangels `return` immer `undefined`;
+  ohne Socket (nach `close()`) gilt die Verbindung jetzt als geschlossen (wie Upstream).
+- Neu: `makeReconnectBackoff()` – exponentielle Wartezeit für Wiederverbindungen (opt-in,
+  Baileys verbindet weiterhin nicht selbst neu).
+
+### 🔧 Weitere Korrekturen
+- `hkdf()` nutzt `crypto.webcrypto` statt des globalen `crypto` (fehlt ohne Flag vor Node 19) und
+  akzeptiert `info` auch als Bytes. Ergebnisse unverändert (RFC-5869-Vektoren + frühere Werte).
+- `generateWAMessageFromContent(jid, { conversation })` stürzte ab (`contextInfo` auf einem String).
+
+### 🧪 Tests (`npm test`, Node-Testrunner, 48 Tests, nur Fixtures)
+- HKDF: RFC 5869 A.1–A.3, alle Medientypen gegen `crypto.hkdfSync`, feste Werte (mit futoin-hkdf
+  gegengeprüft) für Medien, App-State, Medien-Retry, `adv_secret`, Noise.
+- `chunk` (Rest-Stück, Randfälle wie lodash) und Einspielen von 205 Signal-Sessions in 100er-Runden.
+- Optionale Pakete: Laden ohne sie, klare Meldung, Store-Rundlauf mit v4-kompatibler Attrappe.
+- Protobuf-Rundläufe (Text, Umfrage, Knöpfe, Liste, Standort, Kontakt, Reaktion, Löschen,
+  Bearbeiten, WebMessageInfo, Handshake, ClientPayload mit WA-Version).
+- Interaktiv/Karussell erweitert: Erzeugung über die API (Bildkarten mit Upload-Attrappe,
+  `interactiveButtons` byte-genau).
+- Gruppen-Ereignisse (Teilnehmer, Einstellungen, Beitrittsanfragen, Metadaten PN/LID, w:gp2-Binärweg).
+- Retry-Manager und Caches (Grenze 512, TTLs, Zähler, Telefonanfragen, Ablauf mit Mock-Zeit).
+- Sitzungs-Lebenszyklus gegen lokalen Fixture-WebSocket-Server (127.0.0.1): keine hängenden
+  Timer/Intervalle/Listener, Fehlerform 428, kaputte Sitzungen (Abbruch, Müll, werfender
+  Listener) reißen andere nicht mit, Wiederverbindung mit Backoff ohne Intervall-Lecks.
+
+### 📡 WAProto / WhatsApp-Version
+- **Bleibt bei der bewährten Version:** WhatsApp-Web `2.3000.1043857760`, Schema-Kopf
+  `2.3000.1025995023`.
+- Geprüft am 2026-11-22 (nur lesend): Upstream-Hauptzweig (Commit bb0a87e, 14.11.2026) und die
+  npm-Releases `baileys@7.0.0-rc14`/`6.7.24` nutzen ebenfalls `2.3000.1043857760`; Upstream-Schema
+  `2.3000.1029496320`. Für die Kandidaten `2.3000.1055724655` und `2.3000.1055737332` gibt es dort
+  keinen Beleg; der offizielle Generierungsweg (Extraktion aus WhatsApp Web) war in der
+  Prüfumgebung nicht erreichbar. Daher keine Änderung an generierten Dateien oder der Version.
+- Optional: `.github/workflows/waproto-monitor.yml` vergleicht wöchentlich mit dem Upstream und
+  schreibt nur einen Hinweis (nur Leserechte, veröffentlicht nichts).
+
 ## v2.2.33 – Preserve Raw Carousel Transport
 
 - Der automatische MD-Patch erhält rohe `interactiveMessage.carouselMessage`

@@ -41,3 +41,25 @@ test('Ephemeral-Verpackung und Nicht-Karten bleiben erhalten',()=>{
  assert.deepEqual(output.ephemeralMessage.message.viewOnceMessageV2Extension.message.interactiveMessage,card.interactiveMessage);
  assert.equal(prepareInteractiveMessageForMd(output),output);
 });
+
+test('interactiveButtons über generateWAMessageContent: Knöpfe byte-genau, Zitat/Erwähnungen, eine MD-Hülle',async()=>{
+ const {generateWAMessageContent}=require('../lib');
+ const buttons=[
+  {name:'quick_reply',buttonParamsJson:JSON.stringify({display_text:'Ja ✅',id:'!ja'})},
+  {name:'cta_url',buttonParamsJson:JSON.stringify({display_text:'Öffnen',url:'https://example.com/ä?x=1&y=2'})},
+  {name:'cta_copy',buttonParamsJson:JSON.stringify({display_text:'Code',copy_code:'ONIMAI-123'})},
+  {name:'single_select',buttonParamsJson:JSON.stringify({title:'Liste',sections:[{title:'A',rows:[{title:'Eins',id:'!1'},{title:'Zwei',id:'!2'}]}]})}
+ ];
+ const content=await generateWAMessageContent({text:'Wähle',title:'Titel',subtitle:'Unter',footer:'Fuß',interactiveButtons:buttons,mentions:['12345@s.whatsapp.net'],contextInfo:{stanzaId:'Q1'}},{logger:undefined});
+ const wrapped=prepareInteractiveMessageForMd(content);
+ const decoded=proto.Message.decode(proto.Message.encode(wrapped).finish());
+ const msg=decoded.viewOnceMessageV2Extension.message.interactiveMessage;
+ assert.equal(msg.body.text,'Wähle');
+ assert.equal(msg.header.title,'Titel');
+ assert.equal(msg.header.subtitle,'Unter');
+ assert.equal(msg.footer.text,'Fuß');
+ assert.deepEqual(msg.nativeFlowMessage.buttons.map(b=>({name:b.name,buttonParamsJson:b.buttonParamsJson})),buttons);
+ assert.deepEqual(msg.contextInfo.mentionedJid,['12345@s.whatsapp.net']);
+ assert.equal(msg.contextInfo.stanzaId,'Q1');
+ assert.equal(decoded.viewOnceMessageV2Extension.message.messageContextInfo.deviceListMetadataVersion,2);
+});

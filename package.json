@@ -1,6 +1,6 @@
 {
   "name": "@neelegirly/baileys",
-  "version": "2.2.33",
+  "version": "2.3.0",
   "description": "Eigenstaendiger Baileys-Fork von Neele Girl (NICHT WhiskeySockets/Baileys) — multi-device WhatsApp Web API fuer Node.js, mit Multi-Button-Support, QR-/Pairing-Stabilitaet und self-healing WA-Web-Version.",
   "keywords": [
     "whatsapp",
@@ -49,24 +49,17 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@cacheable/node-cache": "^1.5.4",
     "@hapi/boom": "^9.1.3",
-    "@neelegirly/libsignal": "1.0.33",
+    "@neelegirly/libsignal": "1.0.34",
     "async-mutex": "^0.5.0",
-    "audio-decode": "^2.1.3",
     "axios": "^1.3.3",
-    "cache-manager": "4.0.1",
-    "futoin-hkdf": "^1.5.1",
-    "libphonenumber-js": "^1.10.20",
-    "lodash": "^4.17.21",
     "lru-cache": "^11.1.0",
     "music-metadata": "^7.12.3",
-    "node-cache": "^5.1.2",
     "pino": "^7.0.0",
     "protobufjs": "^7.2.4",
-    "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },
   "overrides": {
-    "@neelegirly/libsignal": "1.0.33"
+    "@neelegirly/libsignal": "1.0.34"
   },
   "devDependencies": {
     "@adiwajshing/eslint-config": "github:adiwajshing/eslint-config",
@@ -75,6 +68,8 @@
     "@types/node": "^16.0.0",
     "@types/sharp": "^0.29.4",
     "@types/ws": "^8.0.0",
+    "audio-decode": "2.2.3",
+    "cache-manager": "4.0.1",
     "conventional-changelog-cli": "^2.2.2",
     "eslint": "^8.0.0",
     "jest": "^27.0.6",
@@ -91,12 +86,20 @@
     "typescript": "^4.6.4"
   },
   "peerDependencies": {
+    "audio-decode": "^2.1.3",
+    "cache-manager": "^4.0.1",
     "jimp": "^0.22.12",
     "link-preview-js": "^3.0.0",
     "qrcode-terminal": "^0.12.0",
     "sharp": "^0.32.6"
   },
   "peerDependenciesMeta": {
+    "audio-decode": {
+      "optional": true
+    },
+    "cache-manager": {
+      "optional": true
+    },
     "jimp": {
       "optional": true
     },
@@ -124,6 +127,6 @@
     "build:all": "tsc && typedoc",
     "build:docs": "typedoc",
     "build:tsc": "tsc",
-    "test": "node --check lib/Socket/groups.js && node --check lib/Socket/messages-recv.js && node --check lib/Socket/messages-send.js && node --check lib/Socket/socket.js && node --check lib/Utils/auth-utils.js && node --check lib/Utils/decode-wa-message.js && node --check lib/Utils/process-message.js && node --check lib/Utils/link-preview.js && node -e \"const b=require('./'); if(typeof b.makeWASocket !== 'function' || b.NACK_REASONS.SenderReachoutTimelocked !== 463 || b.QueryIds.FOLLOW !== '24404358912487870') process.exit(1)\" && node --test tests/interactive-envelope.test.cjs tests/carousel-wire.test.cjs"
+    "test": "node --check lib/Socket/groups.js && node --check lib/Socket/messages-recv.js && node --check lib/Socket/messages-send.js && node --check lib/Socket/socket.js && node --check lib/Utils/auth-utils.js && node --check lib/Utils/decode-wa-message.js && node --check lib/Utils/process-message.js && node --check lib/Utils/link-preview.js && node -e \"const b=require('./'); if(typeof b.makeWASocket !== 'function' || b.NACK_REASONS.SenderReachoutTimelocked !== 463 || b.QueryIds.FOLLOW !== '24404358912487870') process.exit(1)\" && node --test tests/interactive-envelope.test.cjs tests/carousel-wire.test.cjs tests/hkdf.test.cjs tests/chunk.test.cjs tests/optional-peers.test.cjs tests/proto-roundtrip.test.cjs tests/group-events.test.cjs tests/retry-and-cache.test.cjs tests/socket-lifecycle.test.cjs"
   }
 }

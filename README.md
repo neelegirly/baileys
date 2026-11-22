@@ -15,9 +15,9 @@
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.2.33 / 1.8.14 / 1.0.33</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.3.0 / 1.8.14 / 1.0.33</strong></sub></p>
 
-[**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-2230)
+[**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-230)
 
 </div>
 
@@ -102,11 +102,27 @@ generateMessageID() // → z. B. "3AC18D8ANEELE3B14420"
 ## 🚀 Installation
 
 ```bash
-npm install @neelegirly/baileys@2.2.32 @neelegirly/libsignal@1.0.33 --save-exact
+npm install @neelegirly/baileys@2.3.0 @neelegirly/libsignal@1.0.33 --save-exact
 ```
 
 ```bash
-yarn add @neelegirly/baileys@2.2.32 @neelegirly/libsignal@1.0.33 --exact
+yarn add @neelegirly/baileys@2.3.0 @neelegirly/libsignal@1.0.33 --exact
+```
+
+### Optionale Pakete (ab 2.3.0)
+
+Diese Pakete werden **nicht mehr automatisch** mitinstalliert. Wer die Funktion nutzt, installiert sie selbst:
+
+| Paket | Wofür | Ohne das Paket |
+| --- | --- | --- |
+| `audio-decode@^2.1.3` | Wellenform bei Sprachnachrichten (`ptt`) | Sprachnachricht wird ohne Wellenform gesendet |
+| `cache-manager@^4.0.1` | `makeCacheManagerAuthState` | Aufruf scheitert mit klarer Meldung samt Installationsbefehl |
+| `sharp` oder `jimp` | Vorschaubilder | wie bisher: keine Vorschau |
+| `link-preview-js` | Link-Vorschauen | wie bisher: keine Vorschau |
+| `qrcode-terminal` | QR im Terminal | wie bisher: kein Terminal-QR |
+
+```bash
+npm install audio-decode@2 cache-manager@4 --save-exact   # nur bei Bedarf
 ```
 
 > Für den kompletten Stack passt dazu `@neelegirly/wa-api@1.8.13`.
@@ -127,9 +143,12 @@ Nach dem Update genügt ein App-Neustart. Der QR-/Pairing-Login zieht sich die a
 import makeWASocket, {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  makeReconnectBackoff,
   DisconnectReason,
   Browsers
 } from '@neelegirly/baileys'
+
+const backoff = makeReconnectBackoff() // 1 s, 2 s, 4 s … höchstens 60 s (±20 %)
 
 async function start() {
   const { state, saveCreds } = await useMultiFileAuthState('./auth')
@@ -145,10 +164,15 @@ async function start() {
   sock.ev.on('creds.update', saveCreds)
 
   sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
-    if (connection === 'open') return console.log('Verbunden 💖')
+    if (connection === 'open') {
+      backoff.reset()
+      return console.log('Verbunden 💖')
+    }
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode
-      if (statusCode !== DisconnectReason.loggedOut) start().catch(console.error)
+      if (statusCode !== DisconnectReason.loggedOut) {
+        setTimeout(() => start().catch(console.error), backoff.next())
+      }
     }
   })
 }
@@ -164,7 +188,7 @@ start().catch(console.error)
 
 | Paket | Version | Rolle |
 |------|---------|-------|
-| `@neelegirly/baileys` | `2.2.32` | Socket, Events, Messaging |
+| `@neelegirly/baileys` | `2.3.0` | Socket, Events, Messaging |
 | `@neelegirly/libsignal` | `1.0.33` | Signal-Protokoll-Komponente |
 | `@neelegirly/wa-api` | `1.8.13` | Lifecycle-, Session- und Update-Wrapper |
 
@@ -184,6 +208,22 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 ```
 
 ---
+
+## 📝 Release Notes `2.3.0`
+
+Schlanker und robuster bei mehreren Sitzungen – ohne API-Bruch:
+
+- **Weniger Abhängigkeiten:** `futoin-hkdf`, `uuid`, `node-cache`, `libphonenumber-js` und `lodash` entfernt
+  (wurden nicht oder nur für `chunk` gebraucht); `audio-decode` und `cache-manager` sind jetzt optionale
+  Peer-Abhängigkeiten (siehe [Optionale Pakete](#optionale-pakete-ab-230)). Frische Produktivinstallation:
+  128 → 101 Pakete, `node_modules` 72 → 25 MB.
+- **Sauberer Verbindungsabbau:** `end()` beendet wartende Abfragen sofort (statt bis zu 60 s Timer),
+  schließt die selbst erzeugten Caches samt Prüf-Intervallen und bricht Retry-/Sync-Timer ab.
+- **Eine kaputte Sitzung reißt keine andere mit:** Ein werfender `connection.update`-Listener beendet beim
+  Schließen nicht mehr den ganzen Prozess.
+- **Neu:** `makeReconnectBackoff()` für Wiederverbindungen mit wachsender Wartezeit (opt-in).
+- WhatsApp-Web-Version bleibt bei der bewährten `2.3000.1043857760`.
+- 48 Tests (`npm test`, Node-Testrunner, nur Fixtures – keine WhatsApp-Verbindung).
 
 ## 📝 Release Notes `2.2.33`
 

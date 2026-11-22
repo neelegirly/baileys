@@ -49,8 +49,8 @@ export declare function sha256(buffer: Buffer): Buffer
 export declare function md5(buffer: Buffer): Buffer
 
 export declare function hkdf(buffer: Uint8Array | Buffer, expandedLength: number, info: {
-    salt?: Buffer
-    info?: string
+    salt?: Buffer | Uint8Array
+    info?: string | Buffer | Uint8Array
 }): Promise<Buffer>
 
 export declare function derivePairingCodeKey(pairingCode: string, salt: Buffer): Promise<Buffer>

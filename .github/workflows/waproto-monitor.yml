@@ -1,0 +1,67 @@
+# Prueft woechentlich, ob der Upstream (WhiskeySockets/Baileys) eine neue
+# WhatsApp-Web-Version oder einen neuen WAProto-Schema-Stand hat, und schreibt
+# nur einen Hinweis in die Job-Zusammenfassung. Er aendert, committet,
+# pusht und veroeffentlicht nichts (nur Leserechte). Uebernehmen bleibt ein
+# eigener, getesteter Schritt (offizieller Generierungsweg, siehe CHANGELOG.md (v2.3.0)).
+name: WAProto-Monitor
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vergleich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Upstream-Stand lesen (nur lesen)
+        id: upstream
+        run: |
+          set -euo pipefail
+          git clone -q --depth 1 --filter=blob:none --no-checkout https://github.com/WhiskeySockets/Baileys.git "$RUNNER_TEMP/upstream"
+          cd "$RUNNER_TEMP/upstream"
+          sha=$(git rev-parse HEAD)
+          version=$(git show HEAD:src/Defaults/baileys-version.json | node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(0,"utf8")).version.join("."))')
+          schema=$(git show HEAD:WAProto/WAProto.proto | sed -n 's#^/// WhatsApp Version: ##p' | head -n 1)
+          # Werte aus fremdem Repository: nur Ziffern/Punkte bzw. Hex zulassen
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "unerwarteter Commit: $sha"; exit 1; }
+          [[ "$version" =~ ^[0-9]+(\.[0-9]+){2}$ ]] || { echo "unerwartete Version"; exit 1; }
+          [[ "$schema" =~ ^[0-9]+(\.[0-9]+){2}$ ]] || { echo "unerwarteter Schema-Stand"; exit 1; }
+          {
+            echo "sha=$sha"
+            echo "version=$version"
+            echo "schema=$schema"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mit dem Fork vergleichen
+        env:
+          UP_SHA: ${{ steps.upstream.outputs.sha }}
+          UP_VERSION: ${{ steps.upstream.outputs.version }}
+          UP_SCHEMA: ${{ steps.upstream.outputs.schema }}
+        run: |
+          set -euo pipefail
+          fork_version=$(node -p 'require("./lib/Defaults/baileys-version.json").version.join(".")')
+          fork_schema=$(sed -n 's#^/// WhatsApp Version: ##p' WAProto/WAProto.proto | head -n 1)
+          {
+            echo "## WAProto-Monitor"
+            echo ""
+            echo "| | Fork | Upstream ($UP_SHA) |"
+            echo "|---|---|---|"
+            echo "| WhatsApp-Web-Version (baileys-version.json) | $fork_version | $UP_VERSION |"
+            echo "| WAProto-Schema (WAProto.proto) | $fork_schema | $UP_SCHEMA |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$fork_version" != "$UP_VERSION" ] || [ "$fork_schema" != "$UP_SCHEMA" ]; then
+            echo "::warning::Upstream hat einen anderen Protokoll-Stand (Version $UP_VERSION, Schema $UP_SCHEMA). Nur pruefen und ueber den offiziellen Generierungsweg uebernehmen - nicht per Hand."
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Abweichung gefunden - Uebernahme nur als eigener, getesteter Schritt." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Fork und Upstream gleich." >> "$GITHUB_STEP_SUMMARY"
+          fi

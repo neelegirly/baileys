@@ -42,3 +42,48 @@ test('explicit carousel wrappers, ephemeral messages and ordinary messages are n
     { conversation: 'Normal message' }
   ]) assert.equal(patchMessageForMdIfRequired(input), input);
 });
+
+test('cards via generateWAMessageContent: image cards, buttons and texts survive generation, MD patch and protobuf', async () => {
+  // direkt aus dem Modul: diese Datei laedt lib/Utils/messages.js vor dem Paket-Index
+  const { generateWAMessageContent } = require('../lib/Utils/messages.js');
+  const uploads = [];
+  // fake upload instead of WhatsApp media servers - no network.
+  // Images are uploaded in parallel, so the call order varies: derive the
+  // path from the uploaded file's own hash instead of the call order.
+  const upload = async (_stream, opts) => {
+    uploads.push(opts.mediaType);
+    return { mediaUrl: 'https://example.invalid/m/' + opts.fileEncSha256B64, directPath: '/m/' + opts.fileEncSha256B64 };
+  };
+  const sha256 = (buf) => require('node:crypto').createHash('sha256').update(buf).digest();
+  const logger = { trace() {}, debug() {}, info() {}, warn() {}, error() {}, child() { return logger; } };
+  const content = await generateWAMessageContent({
+    text: 'Menu', footer: 'Onimai',
+    cards: [1, 2, 3].map(n => ({
+      image: Buffer.alloc(64, n), title: 'Card ' + n, body: 'Body ' + n, footer: 'Footer ' + n,
+      buttons: [
+        { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Pick ' + n, id: '!pick ' + n }) },
+        { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Open', url: 'https://example.com/' + n }) }
+      ]
+    }))
+  }, { upload, logger });
+  assert.deepEqual([...uploads].sort(), ['image', 'image', 'image']);
+  assert.equal(patchMessageForMdIfRequired(content), content, 'raw carousel stays unwrapped');
+  const wire = proto.Message.decode(proto.Message.encode(content).finish());
+  const cards = wire.interactiveMessage.carouselMessage.cards;
+  assert.equal(cards.length, 3);
+  assert.equal(wire.interactiveMessage.body.text, 'Menu');
+  assert.equal(wire.interactiveMessage.footer.text, 'Onimai');
+  cards.forEach((card, i) => {
+    assert.equal(card.header.title, 'Card ' + (i + 1));
+    assert.equal(card.header.hasMediaAttachment, true);
+    const image = card.header.imageMessage;
+    // path belongs to this card's own encrypted file ...
+    assert.equal(image.directPath, '/m/' + Buffer.from(image.fileEncSha256).toString('base64'));
+    // ... and the plaintext hash is this card's own image (no card got another one's)
+    assert.deepEqual(Buffer.from(image.fileSha256), sha256(Buffer.alloc(64, i + 1)));
+    assert.equal(card.header.imageMessage.mediaKey.length, 32);
+    assert.equal(card.body.text, 'Body ' + (i + 1));
+    assert.equal(card.footer.text, 'Footer ' + (i + 1));
+    assert.deepEqual(card.nativeFlowMessage.buttons.map(b => [b.name, JSON.parse(b.buttonParamsJson).display_text]), [['quick_reply', 'Pick ' + (i + 1)], ['cta_url', 'Open']]);
+  });
+});

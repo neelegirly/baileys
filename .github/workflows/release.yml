@@ -1,0 +1,199 @@
+# 📦 Release: veröffentlicht dieses Paket auf npm, sobald ein Versions-Tag vX.Y.Z gepusht wird.
+#
+# Anmeldung bei npm über Trusted Publishing (OIDC): kein Token im Repo, keine Repo-Secrets, kein Token auf dem Server.
+# Einmalig je Paket einzurichten — auf npmjs.com (Paket → Settings → Trusted Publisher → GitHub Actions,
+# Repository = dieses Repo, Workflow-Datei release.yml, Environment leer) oder mit
+#   npm trust github <paket> --file release.yml --repository <owner>/<repo> --allow-publish
+#
+# Zwei Jobs: „pruefen“ (ohne Veröffentlichungsrecht) installiert frisch und testet mit Node 22 und 24; erst danach darf
+# „veroeffentlichen“ (id-token) laufen — dort läuft kein fremder Code (kein npm ci, keine Tests, --ignore-scripts),
+# und nur genau der geprüfte Commit wird veröffentlicht.
+# Neuversuch für einen schon gepushten Tag: Actions → Release → Run workflow, tag = vX.Y.Z
+# (oder: gh workflow run release.yml -f tag=vX.Y.Z). Der Tag muss auf main liegen und „v“ + package.json-Version heißen.
+name: Release
+run-name: Release ${{ inputs.tag || github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Vorhandener Versions-Tag, der veröffentlicht werden soll (vX.Y.Z)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-release-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  pruefen:
+    name: Prüfen (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        node: ['22', '24']
+    outputs:
+      commit: ${{ steps.stand.outputs.commit }}
+    steps:
+      - name: Tag-Namen prüfen
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Ungültiger Tag-Name (erwartet vX.Y.Z)"
+            exit 1
+          fi
+
+      - name: Quelle holen
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Node einrichten
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+
+      - name: Tag, Version und main prüfen
+        id: stand
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="$(node -p 'require("./package.json").name')"
+          version="$(node -p 'require("./package.json").version')"
+          if [ "v${version}" != "${TAG}" ]; then
+            echo "::error::Tag ${TAG} passt nicht zu package.json (${version})"
+            exit 1
+          fi
+          commit="$(git rev-parse "refs/tags/${TAG}^{commit}")"
+          if [ "$(git rev-parse HEAD)" != "${commit}" ]; then
+            echo "::error::Ausgecheckter Stand ist nicht der Tag ${TAG}"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "${commit}" origin/main; then
+            echo "::error::Tag ${TAG} (${commit}) liegt nicht auf main"
+            exit 1
+          fi
+          if npm view "${name}@${version}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "::error::${name}@${version} ist schon veröffentlicht"
+            exit 1
+          fi
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+          echo "${name}@${version} aus ${commit}"
+
+      - name: Laufzeit-Abhängigkeiten frisch installieren
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Tests
+        run: npm test
+
+      - name: Paketinhalt prüfen
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json --ignore-scripts > "${RUNNER_TEMP}/pack.json"
+          node - "${RUNNER_TEMP}/pack.json" <<'JS'
+          const fs = require('fs')
+          const [info] = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))
+          // Laufzeitdaten und Schlüssel gehören nie ins Paket (Namen wie session_cipher.js oder auth-utils.js sind Quelltext und erlaubt)
+          const verboten = [
+            /(^|\/)\.env($|\.)/, /(^|\/)\.npmrc$/, /(^|\/)\.git\//, /(^|\/)node_modules\//, /(^|\/)\.github\//,
+            /(^|\/)(sessions|auth_info[^/]*|baileys_auth_info|backups?)\//,
+            /(^|\/)creds\.json$/, /(^|\/)(pre-key|session|sender-key|app-state-sync-key|app-state-sync-version)-[^/]*\.json$/,
+            /\.(pem|key|p12|pfx|sqlite3?|db|tgz|log)$/i,
+          ]
+          const treffer = info.files.map(f => f.path).filter(p => verboten.some(r => r.test(p)))
+          console.log(`${info.name}@${info.version}: ${info.entryCount} Dateien, ${info.size} Bytes gepackt, ${info.unpackedSize} entpackt`)
+          if (treffer.length) {
+            console.error('::error::Nicht erlaubte Dateien im Paket: ' + treffer.join(', '))
+            process.exit(1)
+          }
+          if (info.size > 8 * 1024 * 1024) {
+            console.error(`::error::Paket ist ${info.size} Bytes groß (Grenze 8 MiB)`)
+            process.exit(1)
+          }
+          JS
+
+  veroeffentlichen:
+    name: Auf npm veröffentlichen
+    needs: pruefen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      COMMIT: ${{ needs.pruefen.outputs.commit }}
+    steps:
+      - name: Tag-Namen prüfen
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || ! [[ "${COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Ungültiger Tag-Name oder kein geprüfter Commit"
+            exit 1
+          fi
+
+      - name: Quelle holen
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
+
+      - name: Node 24 einrichten
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: npm für Trusted Publishing (mindestens 11.5.1)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! node -e 'const v = process.argv[1].split(".").map(Number); process.exit(v[0] > 11 || (v[0] === 11 && (v[1] > 5 || (v[1] === 5 && v[2] >= 1))) ? 0 : 1)' "$(npm --version)"; then
+            npm install -g npm@11.21.3
+          fi
+          echo "node $(node --version), npm $(npm --version)"
+
+      - name: Genau den geprüften Commit veröffentlichen
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(git rev-parse HEAD)" != "${COMMIT}" ]; then
+            echo "::error::Der Tag ${TAG} zeigt nicht mehr auf den geprüften Commit ${COMMIT}"
+            exit 1
+          fi
+          version="$(node -p 'require("./package.json").version')"
+          if [ "v${version}" != "${TAG}" ]; then
+            echo "::error::Tag ${TAG} passt nicht zu package.json (${version})"
+            exit 1
+          fi
+
+      - name: Auf npm veröffentlichen (Trusted Publishing, Herkunftsnachweis automatisch)
+        shell: bash
+        run: |
+          set -uo pipefail
+          if npm publish --access public --ignore-scripts --loglevel verbose 2>&1 | tee "${RUNNER_TEMP}/publish.log"; then
+            exit 0
+          fi
+          echo "::error::npm publish gescheitert — Meldungen zur Trusted-Publishing-Anmeldung (oidc):"
+          grep -i 'oidc' "${RUNNER_TEMP}/publish.log" || echo "(keine oidc-Zeilen: fehlt das id-token-Recht?)"
+          echo "Häufigste Ursache: Auf npmjs.com passt die Vertrauensstellung nicht genau zu ${GITHUB_REPOSITORY} / release.yml (Environment leer)."
+          exit 1

@@ -76,6 +76,11 @@ export declare class MessageRetryManager {
      * Cancel pending phone request
      */
     cancelPendingPhoneRequest(messageId: string): void;
+    /**
+     * Cancels all scheduled phone requests and empties the caches (incl. their
+     * expiry timers). Called automatically when the socket closes. Statistics are kept.
+     */
+    clear(): void;
     private keyToString;
     private removeRecentMessage;
 }
