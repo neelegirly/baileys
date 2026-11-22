@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.3.1 – libsignal 1.0.35 — Event-Loop-Freigabe beim Durchprobieren vieler Sitzungen
+
+- Abhängigkeit `@neelegirly/libsignal` exakt auf `1.0.35` angehoben (in `dependencies` und `overrides`).
+- libsignal 1.0.35 lässt beim Durchprobieren der Sitzungen eines Datensatzes nach spätestens 15 ms den
+  Event-Loop laufen (`setImmediate`). Reihenfolge und Ergebnis bleiben gleich.
+- Gemessen über `makeLibSignalRepository().decryptMessage` (Node 22, frische Produktivinstallation,
+  Datensatz mit 2 850 Sitzungen, Nachricht mit falschem MAC, je 3 Läufe):
+  - 1.0.34: längste Event-Loop-Blockade 1 802–2 228 ms (ein einziger Block, Gesamtdauer gleich).
+  - 1.0.35: längste Blockade 43–54 ms (davon ~20–25 ms das Laden des Datensatzes), Gesamtdauer
+    1,8–2,1 s, dazwischen laufen Timer und andere Sitzungen weiter.
+- PATCH, weil sich weder API noch Verhalten ändern. Sonst keine Abhängigkeit geändert.
+
 ## v2.3.0 – Schlanker, sauberer Verbindungsabbau, echte Tests
 
 - Abhängigkeit `@neelegirly/libsignal` auf `1.0.34` angehoben (veröffentlicht).

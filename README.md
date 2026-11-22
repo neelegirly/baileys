@@ -7,7 +7,7 @@
 
 [![npm](https://img.shields.io/npm/v/%40neelegirly%2Fbaileys?style=for-the-badge&color=ff69b4&logo=npm)](https://www.npmjs.com/package/@neelegirly/baileys)
 [![wa-api](https://img.shields.io/badge/wa--api-1.8.13-c77dff?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/wa-api)
-[![libsignal](https://img.shields.io/badge/libsignal-1.0.33-f4a261?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/libsignal)
+[![libsignal](https://img.shields.io/badge/libsignal-1.0.35-f4a261?style=for-the-badge)](https://www.npmjs.com/package/@neelegirly/libsignal)
 [![WA-Web](https://img.shields.io/badge/WhatsApp--Web-2.3000.1043857760-25D366?style=for-the-badge&logo=whatsapp)](https://web.whatsapp.com)
 [![Node](https://img.shields.io/badge/Node-16+-4caf50?style=for-the-badge&logo=node.js)](https://nodejs.org)
 
@@ -15,7 +15,7 @@
   <img src="https://files.catbox.moe/5bqumy.jpeg" width="780" alt="@neelegirly/baileys Hero" />
 </p>
 
-<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.3.0 / 1.8.14 / 1.0.33</strong></sub></p>
+<p align="center"><sub>2026 Glow-Up Edition · self-healing QR/Pairing · Companion-Stack auf <strong>2.3.1 / 1.8.14 / 1.0.35</strong></sub></p>
 
 [**Installation**](#-installation) · [**Quickstart**](#-quickstart) · [**Was ist dieser Fork?**](#-was-ist-dieser-fork) · [**Versionsschema**](#-versionsschema) · [**Message-ID**](#-message-id-anpassung-neele) · [**Release Notes**](#-release-notes-230)
 
@@ -79,7 +79,7 @@ Wichtig zu verstehen — hier laufen **zwei voneinander unabhängige** Versionsn
 
 | Nummer | Beispiel | Bedeutung |
 | --- | --- | --- |
-| **Fork-Version** | `2.2.32` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
+| **Fork-Version** | `2.3.1` | Die npm-Version *dieses Pakets*. Eigenes semver-Schema von Neelegirly – **nicht** identisch mit der Upstream-Baileys-Versionsnummer. |
 | **WhatsApp-Web-Baseline** | `2.3000.1043857760` | Die Client-Version, die im Handshake an WhatsApp gemeldet wird. Wird zur Laufzeit aktuell gehalten (self-healing). |
 
 Die Fork-Version `2.2.x` ist also reines Paket-Versioning. Welche WhatsApp-Web-Version tatsächlich verbunden wird, zeigt der Boot-Banner und `fetchLatestBaileysVersion()`.
@@ -102,11 +102,11 @@ generateMessageID() // → z. B. "3AC18D8ANEELE3B14420"
 ## 🚀 Installation
 
 ```bash
-npm install @neelegirly/baileys@2.3.0 @neelegirly/libsignal@1.0.33 --save-exact
+npm install @neelegirly/baileys@2.3.1 @neelegirly/libsignal@1.0.35 --save-exact
 ```
 
 ```bash
-yarn add @neelegirly/baileys@2.3.0 @neelegirly/libsignal@1.0.33 --exact
+yarn add @neelegirly/baileys@2.3.1 @neelegirly/libsignal@1.0.35 --exact
 ```
 
 ### Optionale Pakete (ab 2.3.0)
@@ -188,8 +188,8 @@ start().catch(console.error)
 
 | Paket | Version | Rolle |
 |------|---------|-------|
-| `@neelegirly/baileys` | `2.3.0` | Socket, Events, Messaging |
-| `@neelegirly/libsignal` | `1.0.33` | Signal-Protokoll-Komponente |
+| `@neelegirly/baileys` | `2.3.1` | Socket, Events, Messaging |
+| `@neelegirly/libsignal` | `1.0.35` | Signal-Protokoll-Komponente |
 | `@neelegirly/wa-api` | `1.8.13` | Lifecycle-, Session- und Update-Wrapper |
 
 ---
@@ -208,6 +208,14 @@ Beim QR-Scan werden Markenzeilen ober- und unterhalb des QR-Codes ausgegeben. Ve
 ```
 
 ---
+
+## 📝 Release Notes `2.3.1`
+
+- **libsignal 1.0.35:** Beim Durchprobieren vieler Sitzungen (z. B. „Bad MAC“ gegen einen Datensatz mit
+  Tausenden Sitzungen) gibt die Entschlüsselung den Event-Loop regelmäßig frei. Gemessen über
+  `decryptMessage` mit 2 850 Sitzungen: längste Blockade 1,8–2,2 s → 43–54 ms. Andere Sitzungen und Timer
+  laufen in der Zwischenzeit weiter.
+- Sonst keine Änderung an Code, API oder Abhängigkeiten.
 
 ## 📝 Release Notes `2.3.0`
 
